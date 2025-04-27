@@ -1,0 +1,10 @@
+<ehcache xmlns="http://www.ehcache.org/v3"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
+    <cache alias="partyCache">
+        <heap>1000</heap> <!-- Number of entries to store in memory -->
+        <expiry>
+            <ttl unit="seconds">1800</ttl> <!-- Cache TTL (30 minutes) -->
+        </expiry>
+    </cache>
+</ehcache>
