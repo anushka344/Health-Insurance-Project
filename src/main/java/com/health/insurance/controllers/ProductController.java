@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.health.insurance.constants.URIConstraints;
@@ -52,5 +54,16 @@ public class ProductController  {
 		 else
 			 return ResponseEntity.ok(productList);
 	 }
+	 
+	 @GetMapping("/getPaginatedProducts")
+	 public ResponseEntity<Map<String, Object>> getPaginatedProducts(
+	         @RequestParam(defaultValue = "0") int page,
+	         @RequestParam(defaultValue = "5") int size,
+	         @RequestParam(defaultValue = "productName") String sortBy
+	 ) {
+	     Map<String, Object> response = productService.getPaginatedProducts(page, size, sortBy);
+	     return ResponseEntity.ok(response);
+	 }
+
 
 }

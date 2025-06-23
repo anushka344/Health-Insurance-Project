@@ -2,10 +2,17 @@ package com.health.insurance.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.health.insurance.RequestDTO.ProductRequestDto;
@@ -93,4 +100,27 @@ public class ProductService {
 	  public Optional<Product> findProductByCode(String productCode) {
 	        return productRepository.findByProductCode(productCode);  // Get Product object by code
 	    }
+
+	  public Map<String, Object> getPaginatedProducts(int page, int size, String sortBy) {
+		    Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+		    Page<Product> productPage = productRepository.findAll(pageable);
+
+		    List<ProductResponseDto> productDTOs = productPage.getContent().stream().map(product -> {
+		        ProductResponseDto dto = new ProductResponseDto();
+		        dto.setProductCode(product.getProductCode());
+		        dto.setProductName(product.getProductName());
+		        dto.setInceptionDate(product.getInceptionDate());
+		        dto.setPremiumAmt(product.getPremiumAmt());
+		        return dto;
+		    }).collect(Collectors.toList());
+
+		    Map<String, Object> response = new HashMap<>();
+		    response.put("products", productDTOs);
+		    response.put("currentPage", productPage.getNumber());
+		    response.put("totalItems", productPage.getTotalElements());
+		    response.put("totalPages", productPage.getTotalPages());
+
+		    return response;
+		}
+
 }
