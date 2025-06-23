@@ -1,5 +1,7 @@
 package com.health.insurance.services;
 
+
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,9 @@ import com.health.insurance.repositories.ProductRepository;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 
 @Service
 public class PolicyService {
@@ -54,7 +60,10 @@ public class PolicyService {
 	    @Autowired
 	    private BatchLogRepository batchLogRepository;
 
-	    
+	    @Retryable(
+	            value = { RuntimeException.class },
+	            maxAttempts = 3,
+	            backoff = @Backoff(delay = 2000)) // 2 sec delay between retries
 	    public PolicyResponseDTO createQuote(PolicyRequestDTO requestDTO) {
 	        Party party = partyRepository.findByPartyCode(requestDTO.getPartyCode()) .orElseThrow(() -> new CustomException("Party not found", requestDTO.getPartyCode() ));
 	        Product product = productRepository.findByProductCode(requestDTO.getProductCode())
@@ -77,6 +86,17 @@ public class PolicyService {
 
 	        return response;
 	    }
+	    
+	    
+	    
+
+	    // Optional fallback method if all retries fail
+	    @Recover
+	    public PolicyResponseDTO recover(RuntimeException ex, PolicyRequestDTO requestDTO) {
+	        System.err.println("❌ All retry attempts failed for createQuote: " + ex.getMessage());
+	        throw new CustomException("All retries failed due to system error. Please try again later.", requestDTO.getPartyCode());
+	    }
+
 
 	    private String generateProposalNo() {
 	        return "PROP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
